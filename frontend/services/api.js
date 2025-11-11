@@ -14,3 +14,8 @@ export async function addTask(title) {
 export async function deleteTask(id) {
   await axios.delete(`${BASE_URL}/${id}`);
 }
+
+export async function toggleTaskFlag(id) {
+  const res = await axios.patch(`${BASE_URL}/${id}/flag`);
+  return res.data;
+}

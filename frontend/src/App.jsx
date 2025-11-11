@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getTasks, addTask, deleteTask } from "../services/api.js";
+import { getTasks, addTask, deleteTask, toggleTaskFlag } from "../services/api.js";
 import TaskItem from "../components/TaskItem";
 import TaskForm from "../components/TaskForm";
 
@@ -20,12 +20,17 @@ function App() {
     setTasks(tasks.filter(t => t.id !== id));
   };
 
+  const handleToggleFlag = async (id) => {
+    const updatedTask = await toggleTaskFlag(id);
+    setTasks(tasks.map(t => t.id === id ? updatedTask : t));
+  };
+
   return (
     <div style={{ margin: 40 }}>
       <h1>🧠 Task Tracker</h1>
       <TaskForm onAdd={handleAdd} />
       {tasks.map(task => (
-        <TaskItem key={task.id} task={task} onDelete={handleDelete} />
+        <TaskItem key={task.id} task={task} onDelete={handleDelete} onToggleFlag={handleToggleFlag} />
       ))}
     </div>
   );
