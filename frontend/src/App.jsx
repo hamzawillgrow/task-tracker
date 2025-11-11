@@ -22,7 +22,10 @@ function App() {
 
   const handleToggleFlag = async (id) => {
     const updatedTask = await toggleTaskFlag(id);
-    setTasks(tasks.map(t => t.id === id ? updatedTask : t));
+    const updated = tasks.map(t => t.id === id ? updatedTask : t);
+    // Trier : flagged d'abord
+    const sorted = updated.sort((a, b) => b.flagged - a.flagged);
+    setTasks(sorted);
   };
 
   return (

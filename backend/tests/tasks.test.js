@@ -20,26 +20,39 @@ test("PATCH /api/tasks/:id/flag toggles the flag", async () => {
 });
 
 test("GET /api/tasks returns flagged tasks first", async () => {
-    // Crée 2 tâches
-    const task1Res = await request(app).post("/api/tasks").send({ title: "Urgente" });
+    // Crée 3 tâches
+    const task1Res = await request(app).post("/api/tasks").send({ title: "Première (not flagged)" });
     const task1Id = task1Res.body.id;
 
-    const task2Res = await request(app).post("/api/tasks").send({ title: "Normal" });
+    const task2Res = await request(app).post("/api/tasks").send({ title: "Deuxième (will be flagged)" });
+    const task2Id = task2Res.body.id;
 
-    // Flag la première
-    await request(app).patch(`/api/tasks/${task1Id}/flag`);
+    const task3Res = await request(app).post("/api/tasks").send({ title: "Troisième (not flagged)" });
+    const task3Id = task3Res.body.id;
+
+    // Flag la tâche du milieu
+    await request(app).patch(`/api/tasks/${task2Id}/flag`);
 
     // Récupère toutes les tâches
     const res = await request(app).get("/api/tasks");
     expect(res.status).toBe(200);
 
-    // Vérifie que flagged est avant non-flagged
-    const flaggedIndices = res.body.map((t, i) => t.flagged ? i : -1).filter(i => i >= 0);
-    const unflaggedIndices = res.body.map((t, i) => !t.flagged ? i : -1).filter(i => i >= 0);
+    // Doit avoir 4 tâches (1 initiale + 3 créées)
+    expect(res.body.length).toBe(4);
 
-    if (flaggedIndices.length > 0 && unflaggedIndices.length > 0) {
-        const maxFlagged = Math.max(...flaggedIndices);
-        const minUnflagged = Math.min(...unflaggedIndices);
-        expect(maxFlagged).toBeLessThan(minUnflagged);
-    }
+    // Trouver les indices
+    const task2InResponse = res.body.find(t => t.id === task2Id);
+    const task1InResponse = res.body.find(t => t.id === task1Id);
+    const task3InResponse = res.body.find(t => t.id === task3Id);
+
+    // task2 doit être flagged et être la première parmi les flagged
+    expect(task2InResponse.flagged).toBe(true);
+
+    // Tous les flagged doivent être avant les non-flagged
+    const indexOfFlaggedTask2 = res.body.indexOf(task2InResponse);
+    const indexOfUnflaggedTask1 = res.body.indexOf(task1InResponse);
+    const indexOfUnflaggedTask3 = res.body.indexOf(task3InResponse);
+
+    expect(indexOfFlaggedTask2).toBeLessThan(indexOfUnflaggedTask1);
+    expect(indexOfFlaggedTask2).toBeLessThan(indexOfUnflaggedTask3);
 });
